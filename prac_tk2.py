@@ -4,8 +4,18 @@ from tkinter import filedialog, messagebox
 
 current_grid_data = []
 
-def funcion():
-    print("llamada")
+# TODO: implementar reportes
+def listado_alumnos():
+    print("listado_alumnos")
+def promedio_por_materia():
+    print("promedio_por_materia")
+def alumnos_mayor():
+    print("alumnos_mayor")
+def alumnos_menor():
+    print("alumnos_menor")
+def apro_desaprobado():
+    print("apro_desaprobado")
+
 
 def encab_grid(frame):
     headers = ["Alumno", "Materia", "Nota 1", "Nota 2", "Nota 3", "Nota Final"]
@@ -218,8 +228,11 @@ opciones1.add_command(label="Ingreso manual", command=abrir_dialogo_ingreso_manu
 menubar1.add_cascade(label="Ingresar Calificación", menu=opciones1)
 
 opciones2 = tk.Menu(menubar1, tearoff=0)
-opciones2.add_command(label="Rep1", command=funcion)
-opciones2.add_command(label="Rep2", command=funcion)
+opciones2.add_command(label="Listado completo de alumnos y sus notas con promedio", command=listado_alumnos)
+opciones2.add_command(label="Promedio general por matereia", command=promedio_por_materia)
+opciones2.add_command(label="Alumno con nota final mayor a valor un dado", command=alumnos_mayor)
+opciones2.add_command(label="Alumno con nota menor a 4", command=alumnos_menor)
+opciones2.add_command(label="Cantidad de aprobados y desaprobados por materias", command=apro_desaprobado)
 menubar1.add_cascade(label="Elegir reporte", menu=opciones2) 
 
 opciones3 = tk.Menu(menubar1, tearoff=0)
