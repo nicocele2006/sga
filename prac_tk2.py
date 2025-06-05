@@ -252,3 +252,4 @@ frame.pack(pady=20, fill="both", expand=True)
 encab_grid(frame)
 
 ventana1.mainloop()
+
