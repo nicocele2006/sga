@@ -4,25 +4,104 @@ from tkinter import filedialog, messagebox
 
 current_grid_data = []
 
+def mostrar_reporte(title, contenido):
+    ventana_reporte = tk.Toplevel(ventana1)
+    ventana_reporte.title(f"Reporte - {title}")
+    texto_widget = tk.Text(ventana_reporte, wrap="none", width=80, height=20)
+    texto_widget.insert(tk.END, contenido)
+    texto_widget.config(state=tk.DISABLED)
+    texto_widget.pack(padx=10,pady=10)
+                     
 # TODO: implementar reportes
 def listado_alumnos():
-    print("listado_alumnos")
-def promedio_por_materia():
-    print("promedio_por_materia")
-def alumnos_mayor():
-    print("alumnos_mayor")
-def alumnos_menor():
-    print("alumnos_menor")
-def apro_desaprobado():
-    print("apro_desaprobado")
+    if not current_grid_data:
+        messagebox.showinfo("Reporte", "No hay datos cargados.")
+        return
+    reporte = "Alumno\tMateria\tNota 1\tNota 2\tNota 3\tNota Final\n"
+    for row in current_grid_data:
+        reporte += "\t".join(row) + "\n"
+    mostrar_reporte("Listado completo de alumnos", reporte)
 
+def promedio_por_materia():
+    if not current_grid_data:
+        messagebox.showinfo("Reporte", "No hay datos cargados.")
+        return
+    materia_notas = {}
+    for row in current_grid_data:
+        materia = row[1]
+        nota_final = float(row[5])
+        if materia not in materia_notas:
+            materia_notas[materia] = []
+        materia_notas[materia].append(nota_final)
+    reporte = "Materia\tPromedio\n"
+    for materia, notas in materia_notas.items():
+        promedio = sum(notas) / len(notas)
+        reporte += f"{materia}\t{promedio:.2f}\n"
+    mostrar_reporte("Promedio general por materia", reporte)
+
+def alumnos_mayor():
+    if not current_grid_data:
+        messagebox.showinfo("Reporte", "No hay datos cargados.")
+        return
+    # Usar ventana personalizada para pedir el valor de alumnos mayores
+    ventana_valor = tk.Toplevel(ventana1)
+    ventana_valor.title("Ingrese valor de nota")
+    tk.Label(ventana_valor, text="Mostrar alumnos con Nota Final mayor a:").pack(padx=10, pady=10)
+    entrar_valor = tk.Entry(ventana_valor)
+    entrar_valor.pack(padx=10, pady=5)
+    entrar_valor.focus_set()
+
+    def generar_reporte():
+        try:
+            valor = float(entrar_valor.get())
+        except ValueError:
+            messagebox.showerror("Error", "Ingrese un valor numérico válido.", parent=ventana_valor)
+            return
+        reporte = "Alumno\tMateria\tNota Final\n"
+        for row in current_grid_data:
+            if float(row[5]) > valor:
+                reporte += f"{row[0]}\t{row[1]}\t{row[5]}\n"
+        ventana_valor.destroy()
+        mostrar_reporte(f"Alumnos con Nota Final mayor a {valor}", reporte)
+
+    tk.Button(ventana_valor, text="Aceptar", command=generar_reporte).pack(pady=10)
+
+def alumnos_menor():
+    if not current_grid_data:
+        messagebox.showinfo("Reporte", "No hay datos cargados.")
+        return
+    reporte = "Alumno\tMateria\tNota 1\tNota 2\tNota 3\n"
+    for row in current_grid_data:
+        notas = [float(row[2]), float(row[3]), float(row[4])]
+        if any(nota < 4 for nota in notas):
+            reporte += f"{row[0]}\t{row[1]}\t{row[2]}\t{row[3]}\t{row[4]}\n"
+    mostrar_reporte("Alumnos con al menos una nota menor a 4", reporte)
+
+def apro_desaprobado():
+    if not current_grid_data:
+        messagebox.showinfo("Reporte", "No hay datos cargados.")
+        return
+    estadisticas = {}
+    for row in current_grid_data:
+        materia = row[1]
+        nota_final = float(row[5])
+        if materia not in estadisticas:
+            estadisticas[materia] = {'aprobados': 0, 'desaprobados': 0}
+        if nota_final >= 6:
+            estadisticas[materia]['aprobados'] += 1
+        else:
+            estadisticas[materia]['desaprobados'] += 1
+    reporte = "Materia\tAprobados\tDesaprobados\n"
+    for materia, datos in estadisticas.items():
+        reporte += f"{materia}\t{datos['aprobados']}\t{datos['desaprobados']}\n"
+    mostrar_reporte("Aprobados y desaprobados por materia", reporte)
 
 def encab_grid(frame):
-    headers = ["Alumno", "Materia", "Nota 1", "Nota 2", "Nota 3", "Nota Final"]
-    for col, header_text in enumerate(headers):
+    encabezado = ["Alumno", "Materia", "Nota 1", "Nota 2", "Nota 3", "Nota Final"]
+    for col, header_text in enumerate(encabezado):
         header_label = tk.Label(frame, text=header_text, font=("Arial", 10, "bold"), relief="raised", padx=5, pady=5)
         header_label.grid(row=0, column=col, sticky="nsew", padx=1, pady=1)
-    return headers
+    return encabezado
 
 def load_data_into_grid(frame, data):
     for widget in frame.winfo_children():
@@ -32,34 +111,34 @@ def load_data_into_grid(frame, data):
 
     for row_idx, row_data in enumerate(data):
         for col_idx, cell_data in enumerate(row_data):
-            cell_label = tk.Label(frame, text=str(cell_data), font=("Arial", 10), relief="groove", padx=5, pady=5)
-            cell_label.grid(row=row_idx + 1, column=col_idx, sticky="nsew", padx=1, pady=1)
+            celd_label = tk.Label(frame, text=str(cell_data), font=("Arial", 10), relief="groove", padx=5, pady=5)
+            celd_label.grid(row=row_idx + 1, column=col_idx, sticky="nsew", padx=1, pady=1)
 
     for col in range(len(headers)):
         frame.grid_columnconfigure(col, weight=1)
 
 def cargarDatosArchivo():
     global current_grid_data
-    file_path = filedialog.askopenfilename(
+    file_camin = filedialog.askopenfilename(
         title="Seleccionar archivo de alumnos",
         filetypes=[("Archivos CSV", "*.csv")]
     )
-    if file_path:
+    if file_camin:
         try:
-            with open(file_path, 'r', encoding='utf-8') as file:
+            with open(file_camin, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
                 datos_leidos = []
                 for line in lines:
                     # Dividimos la línea por comas y la añadimos como tupla
-                    parts = line.strip().split(',')
-                    if len(parts) == 6: # Todavía es bueno verificar el número de columnas
-                        datos_leidos.append(tuple(parts))
+                    partes = line.strip().split(',')
+                    if len(partes) == 6: 
+                        datos_leidos.append(tuple(partes))
                     else:
                         messagebox.showwarning("Advertencia de formato", f"Se omitió una línea con formato incorrecto (no 6 columnas): {line.strip()}")
 
             current_grid_data.extend(datos_leidos)
             load_data_into_grid(frame, current_grid_data)
-            messagebox.showinfo("Carga exitosa", f"Datos cargados desde: {file_path}")
+            messagebox.showinfo("Carga exitosa", f"Datos cargados desde: {file_camin}")
 
         except Exception as e:
             messagebox.showerror("Error de lectura", f"No se pudo leer el archivo: {e}")
@@ -67,7 +146,6 @@ def cargarDatosArchivo():
         print("Carga de archivo cancelada.")
 
 
-# --- Implementación del algoritmo Insertion Sort ---
 def insertion_sort(arr, key_index, reverse=False, is_numeric=False):
     """
     Ordena una lista de tuplas usando el algoritmo de inserción.
@@ -80,35 +158,32 @@ def insertion_sort(arr, key_index, reverse=False, is_numeric=False):
     """
     n = len(arr)
     for i in range(1, n):
-        current_item = arr[i]
+        actual_item = arr[i]
         j = i - 1
         while j >= 0:
             val_j = arr[j][key_index]
-            val_current = current_item[key_index]
+            val_actual = actual_item[key_index]
 
             if is_numeric:
                 try:
                     val_j = float(val_j)
-                    val_current = float(val_current)
+                    val_actual = float(val_actual)
                 except ValueError:
-                    # En un caso real, aquí podrías manejar datos no numéricos
-                    # Por simplicidad, si falla la conversión, se comparan como strings
                     pass
 
-            # Lógica de comparación para orden ascendente/descendente
             if reverse:
-                if val_j < val_current:
+                if val_j < val_actual:
                     arr[j + 1] = arr[j]
-                    j -= 1
+                    j = j - 1
                 else:
                     break
             else: # Orden ascendente
-                if val_j > val_current:
+                if val_j > val_actual:
                     arr[j + 1] = arr[j]
-                    j -= 1
+                    j = j - 1
                 else:
                     break
-        arr[j + 1] = current_item
+        arr[j + 1] = actual_item
     return arr
 
 # --- Funciones de Ordenamiento ---
@@ -118,8 +193,8 @@ def ordenarPorNombre():
         messagebox.showinfo("Advertencia", "No hay datos para ordenar. Por favor, cargue un archivo primero.")
         return
 
-    # El índice de la columna "Alumno" es 0
-    # Orden alfabético (ascendente por defecto)
+    # El índice de la columna"Alumno" es 0
+    # Orden alfabético ascendente
     sorted_data = insertion_sort(list(current_grid_data), key_index=0, reverse=False, is_numeric=False)
     current_grid_data = sorted_data # Actualiza la variable global
     load_data_into_grid(frame, current_grid_data) # Recarga la grilla con los datos ordenados
@@ -140,7 +215,6 @@ def ordenarPorNota():
     messagebox.showinfo("Ordenamiento", "Datos ordenados por Nota Final (Mayor a Menor).")
 
 
-# --- Nueva Función para Ingreso Manual ---
 def abrir_dialogo_ingreso_manual():
     dialogo = tk.Toplevel(ventana1)
     dialogo.title("Ingreso Manual de Alumno")
@@ -252,4 +326,3 @@ frame.pack(pady=20, fill="both", expand=True)
 encab_grid(frame)
 
 ventana1.mainloop()
-
